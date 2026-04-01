@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chronicle of Fates — DND Character Creator</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Noto+Serif+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+body {
+  background: #060a0a;
+  color: rgba(244,228,193,0.92);
+  font-family: 'Crimson Text', 'Noto Serif SC', serif;
+  overflow-x: hidden;
+}
+
+:root {
+  --void: #060a0a;
+  --abyss: #0a100f;
+  --deep: #0e1614;
+  --surface: #141e1c;
+  --elevated: #1c2826;
+  --gold: #c9a84c;
+  --gold-bright: #e8c84c;
+  --gold-dim: #7a6530;
+  --gold-mist: rgba(201,168,76,0.06);
+  --teal: #3a7a6a;
+  --teal-deep: #1a4a3e;
+  --crimson: #7c142c;
+  --ember: #c45c2c;
+  --ochre: #b8924a;
+  --text-1: rgba(244,228,193,0.92);
+  --text-2: rgba(244,228,193,0.58);
+  --text-3: rgba(244,228,193,0.30);
+  --border-rest: rgba(201,168,76,0.08);
+  --border-hover: rgba(201,168,76,0.20);
+  --border-active: rgba(201,168,76,0.40);
+  --s1: 8px; --s2: 16px; --s3: 24px; --s4: 32px;
+  --s6: 48px; --s8: 64px; --s12: 96px; --s16: 128px;
+}
+
+/* Typography */
+.t-display {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: 0.08em;
+}
+.t-caption {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.8rem;
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.t-micro {
+  font-family: 'Crimson Text', serif;
+  font-size: 0.7rem;
+  line-height: 1.3;
+  letter-spacing: 0.06em;
+}
+
+/* Metallic Gold Text */
+.gold-text {
+  background: linear-gradient(170deg,
+    #7a6530 0%, #c9a84c 25%, #f0d060 45%,
+    #c9a84c 55%, #7a6530 75%, #c9a84c 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 8s ease-in-out infinite;
+  filter: drop-shadow(0 2px 6px rgba(201,168,76,0.3));
+}
+@keyframes shimmer {
+  0%,100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Landing */
+.landing {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--void);
+}
+
+/* z:1 Background */
+.bg-painting {
+  position: absolute; inset: 0; z-index: 1;
+  background-color: #0e1a1a;
+}
+.bg-painting img {
+  width: 110%; height: 110%;
+  object-fit: cover;
+  object-position: center 35%;
+  margin: -5% 0 0 -5%;
+  animation: bg-drift 30s ease-in-out infinite alternate;
+}
+@keyframes bg-drift {
+  0% { transform: scale(1.0) translate(0, 0); }
+  25% { transform: scale(1.03) translate(-0.5%, 0.3%); }
+  50% { transform: scale(1.02) translate(0.3%, -0.4%); }
+  75% { transform: scale(1.04) translate(-0.3%, 0.2%); }
+  100% { transform: scale(1.01) translate(0.2%, -0.2%); }
+}
+
+/* Fog layers */
+.fog-layer {
+  position: absolute; inset: 0; z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  animation: fog-drift linear infinite;
+}
+.fog-1 {
+  background: radial-gradient(ellipse 80% 30% at 20% 70%, rgba(201,168,76,0.04) 0%, transparent 70%);
+  animation-duration: 18s;
+  animation-delay: 0s;
+}
+.fog-2 {
+  background: radial-gradient(ellipse 60% 40% at 75% 55%, rgba(58,122,106,0.05) 0%, transparent 70%);
+  animation-duration: 24s;
+  animation-delay: -6s;
+}
+.fog-3 {
+  background: radial-gradient(ellipse 70% 25% at 50% 80%, rgba(201,168,76,0.03) 0%, transparent 60%);
+  animation-duration: 20s;
+  animation-delay: -10s;
+}
+@keyframes fog-drift {
+  0% { opacity: 0; transform: translateX(-8%) scale(1); }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(8%) scale(1.1); }
+}
+
+/* z:2 Vignette */
+.vignette {
+  position: absolute; inset: 0; z-index: 2;
+  background:
+    radial-gradient(ellipse 50% 40% at 50% 40%, rgba(201,168,76,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 85% 75% at 50% 45%, transparent 25%, rgba(6,10,12,0.45) 60%, rgba(4,6,8,0.88) 100%);
+  pointer-events: none;
+}
+
+/* z:2.5 Atmosphere */
+.atmosphere {
+  position: absolute; inset: 0; z-index: 2;
+  background:
+    linear-gradient(to top, rgba(8,14,16,0.75) 0%, rgba(14,26,26,0.35) 12%, transparent 30%),
+    linear-gradient(to bottom, rgba(26,22,14,0.40) 0%, rgba(26,22,14,0.10) 8%, transparent 20%);
+  pointer-events: none;
+}
+
+/* z:5 Gothic Frame — REMOVED */
+
+/* z:7 Candle overlay */
+.candle-overlay { position: absolute; inset: 0; z-index: 7; pointer-events: none; }
+
+/* z:4 Content */
+.content-area {
+  position: absolute; inset: 0; z-index: 4;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: var(--s8) var(--s4);
+  text-align: center;
+}
+
+/* Crest */
+.crest {
+  position: relative; width: 80px; height: 80px;
+  margin: 0 auto var(--s3);
+}
+.crest svg {
+  width: 100%; height: 100%;
+  color: var(--gold-dim);
+  filter: drop-shadow(0 0 16px rgba(201,168,76,0.2));
+}
+
+/* Subtitle */
+.subtitle-prose {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic; font-weight: 300;
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  line-height: 1.6; color: var(--text-2);
+  max-width: 480px; margin: 0 auto; text-align: center;
+}
+
+/* Divider */
+.rune-divider {
+  display: flex; align-items: center; gap: var(--s2);
+  width: 100%; max-width: 320px; margin: 0 auto;
+}
+.rune-divider .line {
+  flex: 1; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+}
+.rune-divider .gem {
+  width: 6px; height: 6px; transform: rotate(45deg);
+  background: var(--gold);
+  box-shadow: 0 0 8px rgba(201,168,76,0.4);
+}
+
+/* CTA Button */
+.btn-enter {
+  display: inline-flex; align-items: center; gap: var(--s1);
+  padding: 14px 40px;
+  font-family: 'Cinzel', serif; font-size: 0.85rem;
+  font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--text-1);
+  background: linear-gradient(170deg, rgba(201,168,76,0.12) 0%, rgba(201,168,76,0.04) 100%);
+  border: 1px solid var(--border-active);
+  border-radius: 2px; cursor: pointer;
+  position: relative; overflow: hidden;
+  transition: all 400ms cubic-bezier(0.25,0.8,0.25,1);
+}
+.btn-enter:hover {
+  border-color: var(--gold);
+  box-shadow: 0 0 24px rgba(201,168,76,0.25), 0 0 48px rgba(201,168,76,0.10),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+  transform: translateY(-1px);
+}
+.btn-enter:active {
+  transform: translateY(0);
+  box-shadow: 0 0 12px rgba(201,168,76,0.15);
+}
+.btn-enter .icon { width: 16px; height: 16px; opacity: 0.7; transition: opacity 300ms; }
+.btn-enter:hover .icon { opacity: 1; }
+
+/* Feature Row */
+.feature-row {
+  display: flex; gap: var(--s3); justify-content: center; flex-wrap: wrap;
+}
+.feature-stone {
+  display: flex; flex-direction: column; align-items: center;
+  gap: var(--s1); width: 120px;
+  padding: var(--s2) var(--s1); text-align: center;
+  cursor: default; transition: all 400ms;
+}
+.feature-stone .f-icon {
+  width: 32px; height: 32px; color: var(--gold-dim);
+  transition: color 400ms, filter 400ms;
+  filter: drop-shadow(0 0 4px rgba(201,168,76,0.15));
+}
+.feature-stone:hover .f-icon {
+  color: var(--gold-bright);
+  filter: drop-shadow(0 0 12px rgba(201,168,76,0.4));
+}
+.feature-stone .f-label { color: var(--text-2); transition: color 400ms; }
+.feature-stone:hover .f-label { color: var(--text-1); }
+
+/* Embers — enhanced */
+@keyframes float-up {
+  0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+  8% { opacity: 1; }
+  40% { transform: translateY(-40vh) translateX(var(--sway, 20px)) scale(0.8); opacity: 0.9; }
+  70% { transform: translateY(-70vh) translateX(calc(var(--sway, 20px) * -0.5)) scale(0.5); opacity: 0.6; }
+  100% { transform: translateY(-105vh) translateX(var(--sway, 20px)) scale(0.15); opacity: 0; }
+}
+@keyframes float-up-drift {
+  0% { transform: translateY(0) translateX(0) scale(1) rotate(0deg); opacity: 0; }
+  10% { opacity: 0.8; }
+  50% { transform: translateY(-50vh) translateX(var(--sway, -30px)) scale(0.7) rotate(180deg); opacity: 0.7; }
+  100% { transform: translateY(-110vh) translateX(calc(var(--sway, -30px) * 1.5)) scale(0.1) rotate(360deg); opacity: 0; }
+}
+@keyframes sparkle-pulse {
+  0%, 100% { opacity: 0; transform: scale(0.5); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+.ember {
+  position: absolute; border-radius: 50%;
+  background: radial-gradient(circle, rgba(232,200,76,0.9), rgba(196,92,44,0.5));
+  pointer-events: none;
+  animation: float-up var(--dur) ease-in-out infinite;
+  animation-delay: var(--del);
+  box-shadow: 0 0 6px 2px rgba(232,200,76,0.3);
+}
+.ember.bright {
+  background: radial-gradient(circle, rgba(255,230,120,1), rgba(232,200,76,0.6));
+  box-shadow: 0 0 12px 4px rgba(255,230,120,0.5);
+}
+.ember.drift {
+  animation-name: float-up-drift;
+}
+/* Magic sparkles */
+.sparkle {
+  position: absolute; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,240,0.9), rgba(201,168,76,0.3));
+  pointer-events: none;
+  animation: sparkle-pulse var(--dur) ease-in-out infinite;
+  animation-delay: var(--del);
+  box-shadow: 0 0 8px 2px rgba(255,255,240,0.4);
+}
+
+/* Candle Glow */
+@keyframes candle-flicker {
+  0%,100% { opacity: 0.6; transform: scale(1); }
+  25% { opacity: 0.8; transform: scale(1.05); }
+  50% { opacity: 0.5; transform: scale(0.95); }
+  75% { opacity: 0.75; transform: scale(1.02); }
+}
+.candle-point {
+  position: absolute; border-radius: 50%;
+  background: radial-gradient(circle, rgba(232,200,76,0.25) 0%, transparent 70%);
+  animation: candle-flicker 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Scroll Hint */
+@keyframes breathe {
+  0%,100% { opacity: 0.3; transform: translateY(0); }
+  50% { opacity: 0.6; transform: translateY(4px); }
+}
+.scroll-hint {
+  position: absolute; bottom: var(--s4); left: 50%;
+  transform: translateX(-50%); z-index: 4;
+  display: flex; flex-direction: column; align-items: center;
+  gap: var(--s1); animation: breathe 3s ease-in-out infinite;
+}
+.scroll-hint .line {
+  width: 1px; height: 24px;
+  background: linear-gradient(to bottom, var(--gold-dim), transparent);
+}
+
+/* Entrance Animation */
+@keyframes fade-rise {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.anim-enter { animation: fade-rise 1s cubic-bezier(0.25,0.8,0.25,1) both; }
+.anim-d1 { animation-delay: 0.2s; }
+.anim-d2 { animation-delay: 0.5s; }
+.anim-d3 { animation-delay: 0.8s; }
+.anim-d4 { animation-delay: 1.1s; }
+.anim-d5 { animation-delay: 1.5s; }
+.anim-d6 { animation-delay: 1.9s; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+@media (max-width: 640px) {
+  .feature-row { gap: var(--s2); }
+  .feature-stone { width: 88px; }
+  .feature-stone .f-icon { width: 24px; height: 24px; }
+}
+</style>
+</head>
+<body>
+<div class="landing">
+
+  <!-- z:1 Background painting -->
+  <div class="bg-painting">
+    <img src="Shimmersive_Epic_fantasy_game_main_menu_background_thick_impast_3aa475d0-88f1-4362-8e5e-7395fcda171b.png" alt="" role="presentation">
+  </div>
+
+  <!-- z:2 Vignette -->
+  <div class="fog-layer fog-1"></div>
+  <div class="fog-layer fog-2"></div>
+  <div class="fog-layer fog-3"></div>
+  <div class="vignette"></div>
+
+  <!-- z:2.5 Atmosphere -->
+  <div class="atmosphere"></div>
+
+  <!-- z:5 Gothic Stone Frame -->
+  <!-- Gothic frame removed -->
+
+  <!-- z:6 Embers (generated by JS) -->
+  <div id="embers-container" style="position:absolute;inset:0;z-index:6;pointer-events:none;overflow:hidden;"></div>
+
+  <!-- z:7 Candle Glow -->
+  <div class="candle-overlay" id="candle-container"></div>
+
+  <!-- z:4 Content -->
+  <div class="content-area">
+    <!-- Heraldic Crest -->
+    <div class="anim-enter anim-d1">
+      <div class="crest">
+        <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M40 4 L12 18 L12 44 C12 58 24 72 40 76 C56 72 68 58 68 44 L68 18 Z"
+                stroke="currentColor" stroke-width="1.5" fill="none"/>
+          <path d="M40 12 L18 23 L18 42 C18 53 27 64 40 68 C53 64 62 53 62 42 L62 23 Z"
+                stroke="currentColor" stroke-width="0.8" fill="rgba(201,168,76,0.04)"/>
+          <line x1="40" y1="20" x2="40" y2="58" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>
+          <line x1="24" y1="36" x2="56" y2="36" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>
+          <path d="M40 28 C36 32 33 36 33 40 C33 44 36 48 40 50 C44 48 47 44 47 40 C47 36 44 32 40 28Z"
+                fill="currentColor" opacity="0.12" stroke="currentColor" stroke-width="0.6"/>
+          <path d="M36 30 C34 26 31 24 29 25" stroke="currentColor" stroke-width="0.6" opacity="0.6"/>
+          <path d="M44 30 C46 26 49 24 51 25" stroke="currentColor" stroke-width="0.6" opacity="0.6"/>
+          <circle cx="28" cy="48" r="1.5" fill="currentColor" opacity="0.3"/>
+          <circle cx="52" cy="48" r="1.5" fill="currentColor" opacity="0.3"/>
+          <circle cx="40" cy="60" r="1.5" fill="currentColor" opacity="0.3"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Title -->
+    <h1 class="t-display gold-text anim-enter anim-d2" style="margin-bottom:var(--s2)">
+      Chronicle of Fates
+    </h1>
+
+    <!-- Subtitle -->
+    <p class="subtitle-prose anim-enter anim-d3" style="margin-bottom:var(--s4)">
+      Inscribe your legend upon the pages of eternity.<br>
+      Every hero begins with a single choice.
+    </p>
+
+    <!-- Divider -->
+    <div class="rune-divider anim-enter anim-d3" style="margin-bottom:var(--s6)">
+      <span class="line"></span>
+      <span class="gem"></span>
+      <span class="line"></span>
+    </div>
+
+    <!-- CTA Button -->
+    <div class="anim-enter anim-d4" style="margin-bottom:var(--s8)">
+      <button class="btn-enter">
+        <span class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+            <path d="M20 2c-2 2-6 4-10 10l-1 3 3-1c6-4 8-8 10-10l-2-2z"/>
+            <path d="M9 12l-4 8" stroke-linecap="round"/>
+          </svg>
+        </span>
+        Begin Your Chronicle
+      </button>
+    </div>
+
+    <!-- Feature Row -->
+    <div class="feature-row anim-enter anim-d5">
+      <div class="feature-stone">
+        <div class="f-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><line x1="12" y1="2" x2="12" y2="16"/><path d="M8 12h8"/><path d="M10 16l2 6 2-6"/><circle cx="12" cy="2" r="1" fill="currentColor" opacity=".4"/></svg></div>
+        <span class="t-caption f-label">Race &amp; Class</span>
+      </div>
+      <div class="feature-stone">
+        <div class="f-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M12 2c-3 4-6 7-6 11a6 6 0 0012 0c0-4-3-7-6-11z"/><path d="M12 8c-1.5 2-3 3.5-3 5.5a3 3 0 006 0c0-2-1.5-3.5-3-5.5z" opacity=".3"/></svg></div>
+        <span class="t-caption f-label">Abilities</span>
+      </div>
+      <div class="feature-stone">
+        <div class="f-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M8 2c-2 0-3 1-3 3v14c0 2 1 3 3 3h10c0-2-1-3-3-3H8V5h10c2 0 3 1 3 3v9"/><circle cx="6" cy="5" r="1.5" fill="currentColor" opacity=".2"/><circle cx="17" cy="19" r="1.5" fill="currentColor" opacity=".2"/></svg></div>
+        <span class="t-caption f-label">Backstory</span>
+      </div>
+      <div class="feature-stone">
+        <div class="f-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/><polygon points="12,2 13,10 12,12 11,10" fill="currentColor" opacity=".35"/><polygon points="12,22 11,14 12,12 13,14" fill="currentColor" opacity=".15"/></svg></div>
+        <span class="t-caption f-label">AI Narrative</span>
+      </div>
+      <div class="feature-stone">
+        <div class="f-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M3 18L5 8l4 4 3-6 3 6 4-4 2 10H3z"/><line x1="3" y1="18" x2="21" y2="18" stroke-width="1.5"/><circle cx="12" cy="6" r="1" fill="currentColor" opacity=".5"/></svg></div>
+        <span class="t-caption f-label">Destiny</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scroll Hint -->
+  <div class="scroll-hint anim-enter anim-d6">
+    <span class="t-micro" style="color:var(--text-3)">SCROLL</span>
+    <span class="line"></span>
+  </div>
+</div>
+
+<script>
+// Generate enhanced embers + sparkles
+(function() {
+  const container = document.getElementById('embers-container');
+  // Main embers — increased count
+  for (let i = 0; i < 45; i++) {
+    const ember = document.createElement('div');
+    const isBright = Math.random() > 0.7;
+    const isDrift = Math.random() > 0.5;
+    ember.className = 'ember' + (isBright ? ' bright' : '') + (isDrift ? ' drift' : '');
+    const size = 1.5 + Math.random() * 4;
+    const sway = (Math.random() - 0.5) * 80;
+    ember.style.cssText = `
+      left: ${3 + Math.random() * 94}%;
+      bottom: ${-5 - Math.random() * 15}%;
+      width: ${size}px; height: ${size}px;
+      opacity: ${0.3 + Math.random() * 0.6};
+      --dur: ${8 + Math.random() * 18}s;
+      --del: ${Math.random() * 16}s;
+      --sway: ${sway}px;
+    `;
+    container.appendChild(ember);
+  }
+  // Floating magic sparkles
+  for (let i = 0; i < 20; i++) {
+    const sparkle = document.createElement('div');
+    sparkle.className = 'sparkle';
+    const size = 1 + Math.random() * 2.5;
+    sparkle.style.cssText = `
+      left: ${5 + Math.random() * 90}%;
+      top: ${10 + Math.random() * 70}%;
+      width: ${size}px; height: ${size}px;
+      --dur: ${2 + Math.random() * 4}s;
+      --del: ${Math.random() * 5}s;
+    `;
+    container.appendChild(sparkle);
+  }
+
+  // Generate candle glow points
+  const candles = [
+    { x: '4%', y: '25%', size: 180 },
+    { x: '96%', y: '30%', size: 160 },
+    { x: '3%', y: '70%', size: 140 },
+    { x: '97%', y: '65%', size: 150 },
+    { x: '50%', y: '3%', size: 200 },
+  ];
+  const candleContainer = document.getElementById('candle-container');
+  candles.forEach(function(c, i) {
+    const point = document.createElement('div');
+    point.className = 'candle-point';
+    point.style.cssText = `
+      left: ${c.x}; top: ${c.y};
+      width: ${c.size}px; height: ${c.size}px;
+      transform: translate(-50%,-50%);
+      animation-delay: ${i * 0.7}s;
+    `;
+    candleContainer.appendChild(point);
+  });
+})();
+</script>
+</body>
+</html>

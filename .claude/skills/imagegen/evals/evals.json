@@ -1,0 +1,23 @@
+{
+  "skill_name": "imagegen",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "我有一个D&D角色：女性提夫林术士，紫色皮肤，弯曲的黑色角，发光的琥珀色眼睛，穿着带有奥术符文的黑色长袍。请帮我生成一个Together AI的图像生成代码，用来生成这个角色的肖像画。要TypeScript代码，包含完整的prompt工程。",
+      "expected_output": "TypeScript code using Together AI API with a well-crafted prompt following the formula: [Art Style] [Medium] of [Race] [Class] [Physical Description], [Equipment], [Pose], [Background], [Lighting], [Quality]. Should include negative prompts and proper error handling.",
+      "files": []
+    },
+    {
+      "id": 1,
+      "prompt": "Build me a Next.js API route that generates D&D character portraits. It should accept character race, class, and a description, then call an image generation API to create a portrait. Include fallback between providers. TypeScript.",
+      "expected_output": "A Next.js API route with prompt builder that maps race/class to visual descriptors, constructs an optimized prompt, calls Together AI (primary) with FAL.ai fallback, and returns the image URL. Should use the prompt engineering formula from the skill.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "帮我写一个角色肖像生成的prompt builder函数，输入是D&D角色的种族、职业、性别、外观描述，输出是优化过的AI绘画prompt。支持多种风格：高幻想、暗黑奇幻、油画、水彩。要TypeScript。",
+      "expected_output": "A TypeScript prompt builder function with race-specific visual cues, class-specific equipment/poses, style presets, negative prompts, and quality modifiers. Should follow the skill's prompt structure formula and include all 8 races and 12 classes.",
+      "files": []
+    }
+  ]
+}

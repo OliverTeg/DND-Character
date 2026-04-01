@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chronicle of Fates — Race Selection</title>
+
+<!-- Preload critical images (background + 3 portraits) so browser fetches them ASAP -->
+<link rel="preload" as="image" href="Shimmersive_Epic_fantasy_game_main_menu_background_thick_impast_3aa475d0-88f1-4362-8e5e-7395fcda171b.png">
+<link rel="preload" as="image" href="种族立绘/高等精灵/Shimmersive_A_full-body_character_concept_art_sheet_of_a_High_a0177ec5-2819-437e-aff7-8db8fbec1014_3.png">
+<link rel="preload" as="image" href="种族立绘/人类/Shimmersive_A_full-body_character_concept_art_sheet_of_a_Huma_ea3cb5f7-7713-463c-980e-a1cdd7329357_2.png">
+<link rel="preload" as="image" href="种族立绘/矮人/Shimmersive_A_full-body_character_concept_art_sheet_of_a_Dwar_85e8ffc0-7a63-44f3-98d0-5aee2739db6e_2.png">
+
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Noto+Serif+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   RESET & ROOT
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+body {
+  background: #050808;
+  color: rgba(244,228,193,0.92);
+  font-family: 'Crimson Text', 'Noto Serif SC', serif;
+  overflow: hidden;
+  width: 100vw; height: 100vh;
+}
+
+:root {
+  --void: #050808;
+  --gold: #c9a84c;
+  --gold-bright: #e8c84c;
+  --gold-dim: #7a6530;
+  --gold-mist: rgba(201,168,76,0.06);
+  --teal: #3a7a6a;
+  --text-1: rgba(244,228,193,0.92);
+  --text-2: rgba(244,228,193,0.58);
+  --text-3: rgba(244,228,193,0.30);
+  --transition-main: 1.1s cubic-bezier(0.22, 0.61, 0.36, 1);
+  --transition-slow: 1.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* ============================================================
+   METALLIC GOLD TEXT
+   ============================================================ */
+.gold-text {
+  background: linear-gradient(170deg,
+    #7a6530 0%, #c9a84c 25%, #f0d060 45%,
+    #c9a84c 55%, #7a6530 75%, #c9a84c 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 8s ease-in-out infinite;
+  filter: drop-shadow(0 2px 8px rgba(201,168,76,0.3));
+}
+@keyframes shimmer {
+  0%,100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* ============================================================
+   BACKGROUND LAYERS
+   ============================================================ */
+.bg-layer {
+  position: fixed; inset: 0; z-index: 0;
+  background-size: cover;
+  background-position: center 40%;
+  transition: opacity var(--transition-slow);
+}
+#bg-default {
+  opacity: 1;
+  background-color: #0a1210;
+}
+#bg-default img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: center 40%;
+  animation: bg-breathe 25s ease-in-out infinite alternate;
+}
+@keyframes bg-breathe {
+  0%   { transform: scale(1.0); }
+  50%  { transform: scale(1.04); }
+  100% { transform: scale(1.01); }
+}
+#bg-race {
+  opacity: 0;
+  background-color: #0a1210;
+}
+#bg-race img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: center 40%;
+  animation: bg-breathe 25s ease-in-out infinite alternate;
+}
+
+/* Vignette overlay */
+.vignette {
+  position: fixed; inset: 0; z-index: 1;
+  background:
+    radial-gradient(ellipse 85% 75% at 50% 45%, transparent 20%, rgba(5,8,8,0.55) 65%, rgba(5,8,8,0.92) 100%);
+  pointer-events: none;
+  transition: background var(--transition-slow);
+}
+body.state-b .vignette {
+  background:
+    radial-gradient(ellipse 90% 80% at 60% 45%, transparent 15%, rgba(5,8,8,0.50) 55%, rgba(5,8,8,0.88) 100%);
+}
+
+/* Atmospheric fog */
+.fog {
+  position: fixed; inset: 0; z-index: 1;
+  pointer-events: none; opacity: 0;
+  animation: fog-move linear infinite;
+}
+.fog-1 {
+  background: radial-gradient(ellipse 70% 35% at 25% 75%, rgba(201,168,76,0.035) 0%, transparent 70%);
+  animation-duration: 20s;
+}
+.fog-2 {
+  background: radial-gradient(ellipse 55% 30% at 70% 60%, rgba(58,122,106,0.04) 0%, transparent 70%);
+  animation-duration: 28s; animation-delay: -8s;
+}
+@keyframes fog-move {
+  0%   { opacity: 0; transform: translateX(-6%); }
+  20%  { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { opacity: 0; transform: translateX(6%) scale(1.05); }
+}
+
+/* ============================================================
+   EMBERS / PARTICLES (canvas)
+   ============================================================ */
+#particle-canvas {
+  position: fixed; inset: 0; z-index: 2;
+  pointer-events: none;
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+.page-header {
+  position: fixed; top: 0; left: 0; right: 0;
+  z-index: 100;
+  padding: 28px 40px;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+}
+.header-title {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(0.7rem, 1.2vw, 0.9rem);
+  font-weight: 500;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  transition: opacity 0.8s;
+}
+
+/* ============================================================
+   STEP INDICATOR
+   ============================================================ */
+.step-indicator {
+  position: fixed; top: 28px; left: 40px;
+  z-index: 100;
+  display: flex; align-items: center; gap: 10px;
+  pointer-events: none;
+}
+.step-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--text-3);
+  transition: all 0.6s;
+}
+.step-dot.active {
+  background: var(--gold);
+  box-shadow: 0 0 10px rgba(201,168,76,0.4);
+}
+.step-label {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+/* ============================================================
+   STATE A — RACE GALLERY (horizontal carousel)
+   ============================================================ */
+.race-gallery {
+  position: fixed; inset: 0; z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(24px, 4vw, 64px);
+  padding: 0 8vw;
+  transition: opacity 0.6s;
+}
+body.state-b .race-gallery { pointer-events: none; }
+
+/* Individual race card */
+.race-card {
+  position: relative;
+  flex: 0 0 auto;
+  width: clamp(180px, 18vw, 280px);
+  cursor: pointer;
+  transition:
+    opacity var(--transition-main),
+    transform var(--transition-main),
+    filter var(--transition-main);
+  will-change: transform, opacity;
+}
+.race-card.dismissed {
+  opacity: 0 !important;
+  transform: scale(0.85) translateY(20px) !important;
+  pointer-events: none;
+  transition-duration: 0.7s;
+}
+
+/* Portrait wrapper — 1:2 ratio */
+.portrait-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 2;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow:
+    0 8px 40px rgba(0,0,0,0.6),
+    0 0 0 1px rgba(201,168,76,0.08);
+  transition: box-shadow 0.5s, transform 0.5s cubic-bezier(0.22,0.61,0.36,1);
+}
+.race-card:hover .portrait-wrap {
+  box-shadow:
+    0 12px 48px rgba(0,0,0,0.7),
+    0 0 0 1px rgba(201,168,76,0.2),
+    0 0 40px rgba(201,168,76,0.08);
+  transform: translateY(-6px) scale(1.02);
+}
+
+.portrait-wrap img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: center 15%;
+  transition: transform 0.6s cubic-bezier(0.22,0.61,0.36,1), filter 0.6s;
+}
+.race-card:hover .portrait-wrap img {
+  transform: scale(1.05);
+}
+
+/* Hover glow overlay */
+.portrait-glow {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 30%,
+    rgba(201,168,76,0.12) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.5s;
+  pointer-events: none;
+}
+.race-card:hover .portrait-glow { opacity: 1; }
+
+/* Bottom gradient for text */
+.portrait-gradient {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 45%;
+  background: linear-gradient(to top, rgba(5,8,8,0.9) 0%, rgba(5,8,8,0.4) 50%, transparent 100%);
+  pointer-events: none;
+}
+
+/* Race name label */
+.race-name {
+  position: absolute; bottom: 16px; left: 0; right: 0;
+  text-align: center;
+  font-family: 'Cinzel', serif;
+  font-size: clamp(0.85rem, 1.3vw, 1.1rem);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--text-1);
+  text-shadow: 0 2px 12px rgba(0,0,0,0.8);
+  transition: opacity 0.4s;
+}
+.race-name-sub {
+  display: block;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.65rem;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  color: var(--text-3);
+  margin-top: 2px;
+}
+
+/* Breathing glow ring on hover */
+@keyframes ring-breathe {
+  0%,100% { box-shadow: 0 0 0 1px rgba(201,168,76,0.1), inset 0 0 30px rgba(201,168,76,0.02); }
+  50% { box-shadow: 0 0 0 1.5px rgba(201,168,76,0.25), inset 0 0 40px rgba(201,168,76,0.06); }
+}
+.race-card:hover .portrait-wrap {
+  animation: ring-breathe 3s ease-in-out infinite;
+}
+
+/* ============================================================
+   STATE B — SELECTED VIEW
+   ============================================================ */
+
+/* Left anchor portrait (state B) */
+.selected-portrait {
+  position: fixed;
+  left: 0; top: 0; bottom: 0;
+  width: 28vw;
+  z-index: 20;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-10%);
+  transition:
+    opacity var(--transition-main),
+    transform var(--transition-main);
+}
+body.state-b .selected-portrait {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+.selected-portrait img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: center 15%;
+}
+.selected-portrait-gradient {
+  position: absolute; top: 0; right: 0; bottom: 0;
+  width: 50%;
+  background: linear-gradient(to left, rgba(5,8,8,0.95), transparent);
+  pointer-events: none;
+}
+.selected-portrait-bottom {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 25%;
+  background: linear-gradient(to top, rgba(5,8,8,0.8), transparent);
+  pointer-events: none;
+}
+
+/* ============================================================
+   INFO PANEL (right side, state B)
+   ============================================================ */
+.info-panel {
+  position: fixed;
+  top: 0; bottom: 0;
+  left: 28vw; right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 6vh 5vw 6vh 4vw;
+  opacity: 0;
+  transform: translateX(30px);
+  pointer-events: none;
+  transition:
+    opacity 0.9s cubic-bezier(0.22,0.61,0.36,1) 0.35s,
+    transform 0.9s cubic-bezier(0.22,0.61,0.36,1) 0.35s;
+}
+body.state-b .info-panel {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+/* Translucent panel — no blur, clean see-through */
+.info-card {
+  background: rgba(5,8,8,0.55);
+  border: 1px solid rgba(201,168,76,0.12);
+  border-radius: 16px;
+  padding: clamp(28px, 3.5vh, 48px) clamp(28px, 3vw, 48px);
+  max-height: 82vh;
+  overflow-y: auto;
+  box-shadow:
+    0 16px 48px rgba(0,0,0,0.35),
+    inset 0 1px 0 rgba(201,168,76,0.06);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(201,168,76,0.15) transparent;
+}
+.info-card::-webkit-scrollbar { width: 4px; }
+.info-card::-webkit-scrollbar-track { background: transparent; }
+.info-card::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.15); border-radius: 2px; }
+
+/* Decorative top border line */
+.info-card::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: 15%; right: 15%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.3), transparent);
+}
+
+/* Race title in panel */
+.info-race-title {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+.info-race-subtitle {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(0.8rem, 1.1vw, 1rem);
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 24px;
+}
+
+/* Divider */
+.info-divider {
+  width: 80px; height: 1px;
+  background: linear-gradient(90deg, var(--gold-dim), transparent);
+  margin: 20px 0;
+}
+
+/* Lore text */
+.info-lore {
+  font-family: 'Crimson Text', 'Noto Serif SC', serif;
+  font-size: clamp(0.95rem, 1.1vw, 1.05rem);
+  line-height: 1.85;
+  color: var(--text-1);
+  text-shadow: 0 1px 6px rgba(0,0,0,0.7);
+  margin-bottom: 28px;
+  max-width: 620px;
+}
+.info-lore em {
+  color: var(--text-1);
+  font-style: italic;
+}
+
+/* Stat grid */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.stat-item {
+  background: rgba(5,8,8,0.25);
+  border: 1px solid rgba(201,168,76,0.1);
+  border-radius: 10px;
+  padding: 14px 16px;
+  text-align: center;
+  transition: border-color 0.4s, background 0.4s;
+}
+.stat-item:hover {
+  border-color: rgba(201,168,76,0.2);
+  background: rgba(201,168,76,0.06);
+}
+.stat-label {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 6px;
+}
+.stat-value {
+  font-family: 'Cinzel', serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--gold);
+}
+
+/* Traits list */
+.traits-section {
+  margin-bottom: 28px;
+}
+.traits-title {
+  font-family: 'Cinzel', serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--text-2);
+  margin-bottom: 14px;
+}
+.trait-row {
+  display: flex; align-items: flex-start; gap: 12px;
+  margin-bottom: 12px;
+}
+.trait-icon {
+  flex: 0 0 auto;
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  background: rgba(201,168,76,0.06);
+  border: 1px solid rgba(201,168,76,0.1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem;
+  color: var(--gold-dim);
+}
+.trait-text {
+  font-family: 'Crimson Text', 'Noto Serif SC', serif;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--text-1);
+  text-shadow: 0 1px 5px rgba(0,0,0,0.6);
+}
+.trait-text strong {
+  color: var(--text-1);
+  font-weight: 600;
+}
+
+/* ============================================================
+   BACK BUTTON
+   ============================================================ */
+.back-btn {
+  position: fixed;
+  bottom: 36px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  z-index: 50;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.7s 0.5s, transform 0.7s 0.5s cubic-bezier(0.22,0.61,0.36,1);
+
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 32px;
+  background: rgba(5,8,8,0.32);
+  border: 1px solid rgba(201,168,76,0.15);
+  border-radius: 100px;
+  cursor: pointer;
+  color: var(--text-2);
+  font-family: 'Cinzel', serif;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.back-btn:hover {
+  border-color: rgba(201,168,76,0.35);
+  color: var(--text-1);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 20px rgba(201,168,76,0.08);
+}
+.back-btn svg {
+  width: 14px; height: 14px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.5;
+  transition: transform 0.3s;
+}
+.back-btn:hover svg { transform: translateX(-3px); }
+
+body.state-b .back-btn {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
+/* Confirm button */
+.confirm-btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 14px 36px;
+  background: linear-gradient(145deg, rgba(201,168,76,0.15), rgba(201,168,76,0.08));
+  border: 1px solid rgba(201,168,76,0.3);
+  border-radius: 10px;
+  cursor: pointer;
+  color: var(--gold);
+  font-family: 'Cinzel', serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: all 0.4s;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+.confirm-btn:hover {
+  background: linear-gradient(145deg, rgba(201,168,76,0.25), rgba(201,168,76,0.12));
+  border-color: rgba(201,168,76,0.5);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3), 0 0 30px rgba(201,168,76,0.1);
+  transform: translateY(-1px);
+}
+.confirm-btn svg {
+  width: 16px; height: 16px;
+  stroke: currentColor; fill: none;
+  stroke-width: 1.5;
+}
+
+/* ============================================================
+   ENTRANCE ANIMATION
+   ============================================================ */
+@keyframes fade-rise {
+  from { opacity: 0; transform: translateY(30px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.race-card { animation: fade-rise 0.9s cubic-bezier(0.22,0.61,0.36,1) both; }
+.race-card:nth-child(1) { animation-delay: 0.15s; }
+.race-card:nth-child(2) { animation-delay: 0.30s; }
+.race-card:nth-child(3) { animation-delay: 0.45s; }
+
+/* ============================================================
+   SCROLL HINT
+   ============================================================ */
+.gallery-hint {
+  position: fixed;
+  bottom: 32px; left: 50%;
+  transform: translateX(-50%);
+  z-index: 15;
+  text-align: center;
+  transition: opacity 0.6s;
+}
+body.state-b .gallery-hint { opacity: 0; pointer-events: none; }
+.gallery-hint span {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  animation: hint-breathe 3s ease-in-out infinite;
+}
+@keyframes hint-breathe {
+  0%,100% { opacity: 0.35; }
+  50% { opacity: 0.7; }
+}
+
+/* ============================================================
+   LOADING SCREEN — cinematic curtain over the page
+   ============================================================ */
+.loading-curtain {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--void);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 28px;
+  transition: opacity 1.2s cubic-bezier(0.22,0.61,0.36,1);
+}
+.loading-curtain.lifted {
+  opacity: 0;
+  pointer-events: none;
+}
+.loading-crest {
+  width: 48px; height: 48px;
+  color: var(--gold-dim);
+  animation: crest-pulse 2.5s ease-in-out infinite;
+}
+@keyframes crest-pulse {
+  0%,100% { opacity: 0.4; transform: scale(1); filter: drop-shadow(0 0 8px rgba(201,168,76,0.15)); }
+  50% { opacity: 0.9; transform: scale(1.06); filter: drop-shadow(0 0 20px rgba(201,168,76,0.35)); }
+}
+.loading-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  animation: hint-breathe 2s ease-in-out infinite;
+}
+/* Progress bar */
+.loading-bar-track {
+  width: 180px; height: 1px;
+  background: rgba(201,168,76,0.1);
+  border-radius: 1px;
+  overflow: hidden;
+}
+.loading-bar-fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+  transition: width 0.3s ease-out;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- ====== LOADING CURTAIN ====== -->
+<div class="loading-curtain" id="loadingCurtain">
+  <svg class="loading-crest" viewBox="0 0 80 80" fill="none" stroke="currentColor" stroke-width="1.2">
+    <path d="M40 4 L12 18 L12 44 C12 58 24 72 40 76 C56 72 68 58 68 44 L68 18 Z"/>
+    <path d="M40 12 L18 23 L18 42 C18 53 27 64 40 68 C53 64 62 53 62 42 L62 23 Z" opacity="0.4"/>
+    <path d="M40 28 C36 32 33 36 33 40 C33 44 36 48 40 50 C44 48 47 44 47 40 C47 36 44 32 40 28Z" fill="currentColor" opacity="0.3"/>
+  </svg>
+  <div class="loading-text">Preparing Your World</div>
+  <div class="loading-bar-track">
+    <div class="loading-bar-fill" id="loadingBar"></div>
+  </div>
+</div>
+
+<!-- ====== BACKGROUND LAYERS ====== -->
+<div id="bg-default" class="bg-layer">
+  <img src="Shimmersive_Epic_fantasy_game_main_menu_background_thick_impast_3aa475d0-88f1-4362-8e5e-7395fcda171b.png" alt="Default BG">
+</div>
+<div id="bg-race" class="bg-layer">
+  <img id="bg-race-img" src="" alt="Race City BG">
+</div>
+
+<div class="vignette"></div>
+<div class="fog fog-1"></div>
+<div class="fog fog-2"></div>
+
+<!-- Particle canvas -->
+<canvas id="particle-canvas"></canvas>
+
+<!-- ====== HEADER ====== -->
+<div class="page-header">
+  <div class="header-title">Chronicle of Fates — Choose Your Lineage</div>
+</div>
+
+<div class="step-indicator">
+  <div class="step-dot active"></div>
+  <div class="step-dot"></div>
+  <div class="step-dot"></div>
+  <div class="step-dot"></div>
+  <span class="step-label">Species</span>
+</div>
+
+<!-- ====== STATE A: RACE GALLERY ====== -->
+<div class="race-gallery" id="raceGallery">
+
+  <div class="race-card" data-race="high-elf" onclick="selectRace('high-elf')">
+    <div class="portrait-wrap">
+      <img src="种族立绘/高等精灵/Shimmersive_A_full-body_character_concept_art_sheet_of_a_High_a0177ec5-2819-437e-aff7-8db8fbec1014_3.png" alt="High Elf">
+      <div class="portrait-glow"></div>
+      <div class="portrait-gradient"></div>
+      <div class="race-name">
+        High Elf
+        <span class="race-name-sub">高等精灵</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="race-card" data-race="human" onclick="selectRace('human')">
+    <div class="portrait-wrap">
+      <img src="种族立绘/人类/Shimmersive_A_full-body_character_concept_art_sheet_of_a_Huma_ea3cb5f7-7713-463c-980e-a1cdd7329357_2.png" alt="Human">
+      <div class="portrait-glow"></div>
+      <div class="portrait-gradient"></div>
+      <div class="race-name">
+        Human
+        <span class="race-name-sub">人类</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="race-card" data-race="dwarf" onclick="selectRace('dwarf')">
+    <div class="portrait-wrap">
+      <img src="种族立绘/矮人/Shimmersive_A_full-body_character_concept_art_sheet_of_a_Dwar_85e8ffc0-7a63-44f3-98d0-5aee2739db6e_2.png" alt="Dwarf">
+      <div class="portrait-glow"></div>
+      <div class="portrait-gradient"></div>
+      <div class="race-name">
+        Dwarf
+        <span class="race-name-sub">矮人</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Gallery hint -->
+<div class="gallery-hint" id="galleryHint">
+  <span>SELECT YOUR LINEAGE</span>
+</div>
+
+<!-- ====== STATE B: SELECTED PORTRAIT (left anchor) ====== -->
+<div class="selected-portrait" id="selectedPortrait">
+  <img id="selectedPortraitImg" src="" alt="Selected Race">
+  <div class="selected-portrait-gradient"></div>
+  <div class="selected-portrait-bottom"></div>
+</div>
+
+<!-- ====== STATE B: INFO PANEL (right side) ====== -->
+<div class="info-panel" id="infoPanel">
+  <div class="info-card" id="infoCard">
+    <!-- Populated by JS -->
+  </div>
+</div>
+
+<!-- ====== BACK BUTTON ====== -->
+<button class="back-btn" id="backBtn" onclick="goBack()">
+  <svg viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+  Re-choose
+</button>
+
+<script>
+/* ============================================================
+   RACE DATA
+   ============================================================ */
+const RACES = {
+  'high-elf': {
+    name: 'High Elf',
+    nameCN: '高等精灵',
+    subtitle: 'Eladrin · Tel\'Quessir · The Fair Folk',
+    portrait: '种族立绘/高等精灵/Shimmersive_A_full-body_character_concept_art_sheet_of_a_High_a0177ec5-2819-437e-aff7-8db8fbec1014_3.png',
+    cityBg: '主城概念图/高等精灵/Shimmersive_Epic_fantasy_concept_art_thick_impasto_oil_painti_60e9b3cc-a18b-4b8a-95e6-0984b340d487_2.png',
+    lore: '高等精灵是费伦大陆上最古老的种族之一。他们是星光与低语的子嗣，在世界尚年轻时便已在密林深处建起了第一座图书馆。裂隙纪元之后，银月城的精灵学者们并未如人类那般恐惧——他们只是在古老的星图上标记了一个新的记号，然后继续抄写那些已经抄写了三千年的经卷。<em>"时间是一条河，"大法师艾拉妮尔在烛堡的公开演讲中说道，"而我们是河床上的石头。水流过去了，我们还在。"</em>',
+    stats: [
+      { label: '敏捷', value: '+2' },
+      { label: '智力', value: '+1' },
+      { label: '寿命', value: '750 年' },
+    ],
+    traits: [
+      { icon: '✦', name: '黑暗视觉', desc: '你能在黑暗中视物 60 尺，在微光中视作明亮光照。' },
+      { icon: '◈', name: '敏锐感官', desc: '你在感知（察觉）检定上具有优势。' },
+      { icon: '⚝', name: '精灵武器训练', desc: '你拥有长剑、短剑、短弓和长弓的熟练。' },
+      { icon: '✧', name: '精灵戏法', desc: '你从法师法术列表中习得一个戏法，智力为其施法属性。' },
+      { icon: '◇', name: '精灵恍惚', desc: '精灵不需要睡眠。你进行 4 小时的深度冥想即可获得等同于 8 小时睡眠的效果。' },
+    ]
+  },
+  'human': {
+    name: 'Human',
+    nameCN: '人类',
+    subtitle: 'The Adaptable · The Ambitious · The Many',
+    portrait: '种族立绘/人类/Shimmersive_A_full-body_character_concept_art_sheet_of_a_Huma_ea3cb5f7-7713-463c-980e-a1cdd7329357_2.png',
+    cityBg: '主城概念图/人类/Shimmersive_Classical_romanticism_oil_painting_of_a_sprawling_ef993ee1-4d6e-4cd3-a423-59363912001c_2.png',
+    lore: '人类是费伦大陆上最年轻的文明种族，却也是扩张最快的一个。他们的城市像野草一样顽强地生长在每一寸可以立足的土地上。博德之门的酒馆老板、深水城的码头工人、无棣城的商人——他们没有精灵的长寿，没有矮人的坚韧，但他们有一种更危险的东西：<em>不安分的野心</em>。裂隙纪元之后，当其他种族选择观望或退缩时，是人类第一个向那道黑暗的伤口派出了探险队。',
+    stats: [
+      { label: '全属性', value: '+1' },
+      { label: '额外专长', value: '1 个' },
+      { label: '寿命', value: '80 年' },
+    ],
+    traits: [
+      { icon: '✦', name: '适应性强', desc: '你在一项你选择的属性值上获得 +1 加值（已计入全属性 +1）。' },
+      { icon: '◈', name: '额外语言', desc: '你能说、读、写通用语以及另外一种你选择的标准语言。' },
+      { icon: '⚝', name: '起源专长', desc: '你在第一级时获得一个你选择的专长。' },
+      { icon: '✧', name: '灵感之源', desc: '每次完成长休后，你获得一点灵感（2024 版规则）。' },
+    ]
+  },
+  'dwarf': {
+    name: 'Dwarf',
+    nameCN: '矮人',
+    subtitle: 'Stout Folk · Children of Moradin · The Unyielding',
+    portrait: '种族立绘/矮人/Shimmersive_A_full-body_character_concept_art_sheet_of_a_Dwar_85e8ffc0-7a63-44f3-98d0-5aee2739db6e_2.png',
+    cityBg: '主城概念图/矮人/Shimmersive_A_massive_underground_forge_deep_within_the_Iron__e674909c-6426-40d2-be48-b83f82dc0450_3.png',
+    lore: '矮人以石刻记录历史——不是因为他们不信任纸张，而是因为他们不信任任何不能承受锤击的东西。在铁锻深渊中，最古老的石刻已有九千年的历史，记载着从莫拉丁的第一锤到裂隙降临的每一个纪元。矮人将深渊裂隙命名为<em>"坎-达拉克"——不可闭合的嘴</em>。他们没有恐惧，但他们在城门上多加了一道锁，在酒窖里多储了三年的烈酒。这就是矮人面对末日的方式：确保在世界终结之前，储备足够的麦酒。',
+    stats: [
+      { label: '体质', value: '+2' },
+      { label: '感知', value: '+1' },
+      { label: '寿命', value: '350 年' },
+    ],
+    traits: [
+      { icon: '✦', name: '黑暗视觉', desc: '在黑暗中视物 60 尺，微光视作明亮光照。' },
+      { icon: '◈', name: '矮人韧性', desc: '你在对抗毒素的豁免检定上具有优势，且对毒素伤害具有抗性。' },
+      { icon: '⚝', name: '矮人战斗训练', desc: '你拥有战斧、手斧、轻锤和战锤的熟练。' },
+      { icon: '✧', name: '岩石知识', desc: '每当你进行与石制品起源相关的智力（历史）检定时，视为拥有该技能的熟练并将熟练加值翻倍。' },
+    ]
+  }
+};
+
+/* ============================================================
+   STATE MACHINE
+   ============================================================ */
+let currentState = 'A';
+let selectedRace = null;
+
+function selectRace(raceId) {
+  if (currentState === 'B') return;
+  currentState = 'transitioning';
+  selectedRace = raceId;
+  const race = RACES[raceId];
+
+  // 1. Dismiss ALL cards (including the clicked one)
+  document.querySelectorAll('.race-card').forEach(card => {
+    card.classList.add('dismissed');
+  });
+
+  // 2. Preload the city background
+  const bgRaceImg = document.getElementById('bg-race-img');
+  bgRaceImg.src = race.cityBg;
+
+  // 3. Set the selected portrait
+  document.getElementById('selectedPortraitImg').src = race.portrait;
+
+  // 4. Populate info panel
+  populateInfoPanel(race);
+
+  // 5. After all cards have faded out, transition backgrounds and layout
+  setTimeout(() => {
+    // Fade out default bg, fade in race bg
+    document.getElementById('bg-default').style.opacity = '0';
+    document.getElementById('bg-race').style.opacity = '1';
+
+    // Switch to state B
+    document.body.classList.add('state-b');
+    currentState = 'B';
+  }, 550);
+}
+
+function goBack() {
+  if (currentState !== 'B') return;
+  currentState = 'transitioning';
+
+  // Remove state-b class → triggers reverse CSS transitions (panel + portrait out)
+  document.body.classList.remove('state-b');
+
+  // Swap backgrounds back
+  document.getElementById('bg-default').style.opacity = '1';
+  document.getElementById('bg-race').style.opacity = '0';
+
+  // After panel/portrait have faded out, bring gallery cards back with smooth fade-in
+  setTimeout(() => {
+    const cards = document.querySelectorAll('.race-card');
+
+    // Step 1: Kill the CSS animation (its fill-mode:both overrides inline styles)
+    //         Pin at opacity:0, remove dismissed class — all in one reflow
+    cards.forEach(card => {
+      card.style.animation = 'none';         // ← crucial: neutralise fill-mode:both
+      card.style.transition = 'none';
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(22px) scale(0.96)';
+      card.classList.remove('dismissed');
+    });
+
+    // Step 2: Force reflow so the browser commits the opacity:0 frame
+    void cards[0].offsetHeight;
+
+    // Step 3: Now apply the smooth transition to full opacity (staggered)
+    cards.forEach((card, i) => {
+      const delay = i * 0.13;
+      card.style.transition =
+        `opacity 1s cubic-bezier(0.22,0.61,0.36,1) ${delay}s, ` +
+        `transform 1s cubic-bezier(0.22,0.61,0.36,1) ${delay}s`;
+      card.style.opacity = '1';
+      card.style.transform = 'translateY(0) scale(1)';
+    });
+
+    // Step 4: After animation completes, clean up inline overrides
+    //         Keep animation:none so fade-rise doesn't re-trigger
+    setTimeout(() => {
+      cards.forEach(card => {
+        card.style.transition = '';
+        card.style.opacity = '';
+        card.style.transform = '';
+      });
+    }, 1500);
+
+    currentState = 'A';
+    selectedRace = null;
+  }, 900);
+}
+
+function populateInfoPanel(race) {
+  const card = document.getElementById('infoCard');
+  card.innerHTML = `
+    <div class="info-race-title gold-text">${race.name}</div>
+    <div class="info-race-subtitle">${race.subtitle}</div>
+    <div class="info-divider"></div>
+    <div class="info-lore">${race.lore}</div>
+    <div class="stat-grid">
+      ${race.stats.map(s => `
+        <div class="stat-item">
+          <div class="stat-label">${s.label}</div>
+          <div class="stat-value">${s.value}</div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="traits-section">
+      <div class="traits-title">Racial Traits · 种族特性</div>
+      ${race.traits.map(t => `
+        <div class="trait-row">
+          <div class="trait-icon">${t.icon}</div>
+          <div class="trait-text"><strong>${t.name}</strong> — ${t.desc}</div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="info-divider" style="margin-top:8px;"></div>
+    <button class="confirm-btn" onclick="alert('进入下一步：职业选择（待实现）')">
+      <span>Confirm Selection</span>
+      <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
+  `;
+}
+
+/* ============================================================
+   PARTICLE SYSTEM (Canvas)
+   ============================================================ */
+(function() {
+  const canvas = document.getElementById('particle-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H;
+  const particles = [];
+  const PARTICLE_COUNT = 80;
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // Particle class
+  class Particle {
+    constructor() { this.reset(true); }
+    reset(initial) {
+      this.x = Math.random() * W;
+      this.y = initial ? Math.random() * H : H + 10;
+      this.size = 0.8 + Math.random() * 2.5;
+      this.speedY = -(0.15 + Math.random() * 0.6);
+      this.speedX = (Math.random() - 0.5) * 0.3;
+      this.sway = Math.random() * Math.PI * 2;
+      this.swaySpeed = 0.005 + Math.random() * 0.015;
+      this.swayAmp = 15 + Math.random() * 25;
+      this.maxOpacity = 0.2 + Math.random() * 0.55;
+      this.opacity = initial ? Math.random() * this.maxOpacity : 0;
+      this.fadeIn = !initial;
+      // Color variation
+      const r = 200 + Math.random() * 55;
+      const g = 160 + Math.random() * 70;
+      const b = 40 + Math.random() * 40;
+      this.color = `${r},${g},${b}`;
+      this.glowSize = this.size * (2 + Math.random() * 3);
+      // Is this a "sparkle" type?
+      this.isSparkle = Math.random() > 0.75;
+      if (this.isSparkle) {
+        this.sparklePhase = Math.random() * Math.PI * 2;
+        this.sparkleSpeed = 0.03 + Math.random() * 0.05;
+        this.speedY *= 0.3;
+        this.color = '255,245,220';
+        this.maxOpacity = 0.15 + Math.random() * 0.35;
+      }
+    }
+    update() {
+      this.sway += this.swaySpeed;
+      this.x += this.speedX + Math.sin(this.sway) * 0.3;
+      this.y += this.speedY;
+
+      if (this.fadeIn) {
+        this.opacity = Math.min(this.opacity + 0.005, this.maxOpacity);
+        if (this.opacity >= this.maxOpacity) this.fadeIn = false;
+      }
+      // Fade out near top
+      if (this.y < H * 0.15) {
+        this.opacity *= 0.995;
+      }
+
+      if (this.isSparkle) {
+        this.sparklePhase += this.sparkleSpeed;
+        this.opacity = this.maxOpacity * (0.3 + 0.7 * Math.abs(Math.sin(this.sparklePhase)));
+      }
+
+      if (this.y < -20 || this.opacity < 0.01) this.reset(false);
+    }
+    draw() {
+      ctx.save();
+      // Glow
+      ctx.globalAlpha = this.opacity * 0.4;
+      ctx.fillStyle = `rgba(${this.color},1)`;
+      ctx.shadowColor = `rgba(${this.color},0.6)`;
+      ctx.shadowBlur = this.glowSize;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fill();
+      // Core
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = this.opacity;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size * 0.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    particles.push(new Particle());
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => { p.update(); p.draw(); });
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+
+/* ============================================================
+   IMAGE PRELOADER — tracks all critical images, drives loading bar,
+   lifts the curtain only when everything is ready.
+   Also silently preloads city backgrounds so State B is instant.
+   ============================================================ */
+(function() {
+  const curtain = document.getElementById('loadingCurtain');
+  const bar = document.getElementById('loadingBar');
+
+  // Critical images: BG + 3 portraits (must load before curtain lifts)
+  const criticalSrcs = [
+    'Shimmersive_Epic_fantasy_game_main_menu_background_thick_impast_3aa475d0-88f1-4362-8e5e-7395fcda171b.png',
+    '种族立绘/高等精灵/Shimmersive_A_full-body_character_concept_art_sheet_of_a_High_a0177ec5-2819-437e-aff7-8db8fbec1014_3.png',
+    '种族立绘/人类/Shimmersive_A_full-body_character_concept_art_sheet_of_a_Huma_ea3cb5f7-7713-463c-980e-a1cdd7329357_2.png',
+    '种族立绘/矮人/Shimmersive_A_full-body_character_concept_art_sheet_of_a_Dwar_85e8ffc0-7a63-44f3-98d0-5aee2739db6e_2.png',
+  ];
+
+  // Bonus: prefetch city backgrounds in the background (non-blocking)
+  const prefetchSrcs = [
+    '主城概念图/高等精灵/Shimmersive_Epic_fantasy_concept_art_thick_impasto_oil_painti_60e9b3cc-a18b-4b8a-95e6-0984b340d487_2.png',
+    '主城概念图/人类/Shimmersive_Classical_romanticism_oil_painting_of_a_sprawling_ef993ee1-4d6e-4cd3-a423-59363912001c_2.png',
+    '主城概念图/矮人/Shimmersive_A_massive_underground_forge_deep_within_the_Iron__e674909c-6426-40d2-be48-b83f82dc0450_3.png',
+  ];
+
+  let loaded = 0;
+  const total = criticalSrcs.length;
+
+  function onLoad() {
+    loaded++;
+    bar.style.width = Math.round((loaded / total) * 100) + '%';
+    if (loaded >= total) liftCurtain();
+  }
+
+  function liftCurtain() {
+    // Small extra pause for polish
+    setTimeout(function() {
+      curtain.classList.add('lifted');
+      // Remove from DOM after fade-out completes
+      setTimeout(function() { curtain.remove(); }, 1400);
+    }, 300);
+
+    // Start prefetching city backgrounds (non-blocking)
+    prefetchSrcs.forEach(function(src) {
+      var img = new Image();
+      img.src = src;
+    });
+  }
+
+  // Begin loading
+  criticalSrcs.forEach(function(src) {
+    var img = new Image();
+    img.onload = onLoad;
+    img.onerror = onLoad; // don't block on broken images
+    img.src = src;
+  });
+
+  // Safety net: lift curtain after 12s even if images are slow
+  setTimeout(function() {
+    if (!curtain.classList.contains('lifted')) liftCurtain();
+  }, 12000);
+})();
+</script>
+
+</body>
+</html>

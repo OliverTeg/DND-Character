@@ -1,0 +1,23 @@
+{
+  "skill_name": "react-ui-design",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "帮我做一个D&D角色属性面板的React组件，要有6个属性值（力量、敏捷、体质、智力、感知、魅力）的展示，每个属性要显示数值和调整值。风格参考暗黑破坏神那种暗黑奇幻风格。输出单个jsx文件。",
+      "expected_output": "A single .jsx file with a dark fantasy styled D&D ability score panel. Should have proper 8px grid spacing, glassmorphism, gold accents, Cinzel typography, hover states, and layered shadows.",
+      "files": []
+    },
+    {
+      "id": 1,
+      "prompt": "Create a React character selection card grid for a fantasy RPG game. Show 6 character classes (warrior, mage, rogue, healer, ranger, paladin) as selectable cards with icons, names, and short descriptions. Dark theme, make it look really polished and professional. Single jsx file please.",
+      "expected_output": "A single .jsx file with a grid of character class cards. Should feature selection states with glow effects, staggered entrance animations, proper typography hierarchy, dark fantasy color palette, and all interactive states (hover/selected/focus).",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "我需要一个奇幻风格的角色创建向导UI，包含3个步骤：选择种族、选择职业、分配属性。要有步骤导航条，左边是角色预览区，右边是选择区。暗色主题，要有氛围感。React单文件组件。",
+      "expected_output": "A single .jsx file with a multi-step character creation wizard. Left-right split layout, step navigation with active/completed states, atmospheric background effects, dark fantasy glassmorphism, proper component structure with state management.",
+      "files": []
+    }
+  ]
+}
