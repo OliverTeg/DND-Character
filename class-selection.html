@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chronicle of Fates — Class Selection</title>
+
+<!-- Preload critical assets -->
+<link rel="preload" as="image" href="职业选择/背景/万神殿.png">
+<link rel="preload" as="image" href="职业选择/职业立绘/战士/warrior1.png">
+<link rel="preload" as="image" href="职业选择/职业立绘/法师/soccer2.png">
+<link rel="preload" as="image" href="职业选择/职业立绘/牧师/Priest.png">
+<link rel="preload" as="image" href="职业选择/职业立绘/盗贼/rogue.png">
+<link rel="preload" as="image" href="职业选择/职业立绘/德鲁伊/druid4.png">
+
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Noto+Serif+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   RESET & ROOT — mirrors race-selection design tokens
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+body {
+  background: #050808;
+  color: rgba(244,228,193,0.92);
+  font-family: 'Crimson Text', 'Noto Serif SC', serif;
+  overflow: hidden;
+  width: 100vw; height: 100vh;
+  user-select: none;
+}
+
+:root {
+  --void: #050808;
+  --gold: #c9a84c;
+  --gold-bright: #e8c84c;
+  --gold-dim: #7a6530;
+  --gold-mist: rgba(201,168,76,0.06);
+  --teal: #3a7a6a;
+  --text-1: rgba(244,228,193,0.92);
+  --text-2: rgba(244,228,193,0.58);
+  --text-3: rgba(244,228,193,0.30);
+  --transition-carousel: 0.75s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* ============================================================
+   METALLIC GOLD TEXT
+   ============================================================ */
+.gold-text {
+  background: linear-gradient(170deg,
+    #7a6530 0%, #c9a84c 25%, #f0d060 45%,
+    #c9a84c 55%, #7a6530 75%, #c9a84c 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 8s ease-in-out infinite;
+  filter: drop-shadow(0 2px 8px rgba(201,168,76,0.3));
+}
+@keyframes shimmer {
+  0%,100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* ============================================================
+   BACKGROUND — Pantheon hall
+   ============================================================ */
+.bg-layer {
+  position: fixed; inset: 0; z-index: 0;
+}
+.bg-layer img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: center 45%;
+  animation: bg-breathe 28s ease-in-out infinite alternate;
+}
+@keyframes bg-breathe {
+  0%   { transform: scale(1.0); }
+  50%  { transform: scale(1.03); }
+  100% { transform: scale(1.01); }
+}
+
+/* Vignette */
+.vignette {
+  position: fixed; inset: 0; z-index: 1;
+  background:
+    radial-gradient(ellipse 75% 65% at 50% 50%, transparent 15%, rgba(5,8,8,0.5) 60%, rgba(5,8,8,0.92) 100%);
+  pointer-events: none;
+}
+
+/* Top & bottom atmosphere gradients */
+.atmosphere {
+  position: fixed; inset: 0; z-index: 1;
+  background:
+    linear-gradient(to bottom, rgba(5,8,8,0.6) 0%, transparent 18%),
+    linear-gradient(to top, rgba(5,8,8,0.75) 0%, rgba(5,8,8,0.3) 10%, transparent 28%);
+  pointer-events: none;
+}
+
+/* Fog */
+.fog {
+  position: fixed; inset: 0; z-index: 1;
+  pointer-events: none; opacity: 0;
+  animation: fog-move linear infinite;
+}
+.fog-1 {
+  background: radial-gradient(ellipse 70% 35% at 30% 70%, rgba(201,168,76,0.025) 0%, transparent 70%);
+  animation-duration: 22s;
+}
+.fog-2 {
+  background: radial-gradient(ellipse 55% 30% at 65% 55%, rgba(58,122,106,0.03) 0%, transparent 70%);
+  animation-duration: 30s; animation-delay: -10s;
+}
+@keyframes fog-move {
+  0%   { opacity: 0; transform: translateX(-5%); }
+  20%  { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { opacity: 0; transform: translateX(5%) scale(1.04); }
+}
+
+/* ============================================================
+   PARTICLE CANVAS
+   ============================================================ */
+#particle-canvas {
+  position: fixed; inset: 0; z-index: 2;
+  pointer-events: none;
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+.page-header {
+  position: fixed; top: 0; left: 0; right: 0;
+  z-index: 100;
+  padding: 28px 40px;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+}
+.header-title {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(0.7rem, 1.2vw, 0.9rem);
+  font-weight: 500;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+/* Step indicator */
+.step-indicator {
+  position: fixed; top: 28px; left: 40px;
+  z-index: 100;
+  display: flex; align-items: center; gap: 10px;
+  pointer-events: none;
+}
+.step-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--text-3);
+  transition: all 0.6s;
+}
+.step-dot.done { background: var(--gold-dim); }
+.step-dot.active {
+  background: var(--gold);
+  box-shadow: 0 0 10px rgba(201,168,76,0.4);
+}
+.step-label {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+/* ============================================================
+   3D CAROUSEL
+   ============================================================ */
+.carousel-stage {
+  position: fixed; inset: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: center;
+  perspective: 1200px;
+  perspective-origin: 50% 48%;
+}
+
+.carousel-ring {
+  position: relative;
+  width: 1px; height: 1px;             /* ring itself is a point; children orbit */
+  transform-style: preserve-3d;
+  transition: transform var(--transition-carousel);
+}
+
+/* Individual class card — positioned by JS via rotateY + translateZ */
+.class-card {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: clamp(190px, 17vw, 270px);
+  transform-style: preserve-3d;
+  cursor: pointer;
+  /* backface-visibility: hidden; — intentionally NOT set so we keep smooth rotation */
+  transition:
+    filter var(--transition-carousel),
+    opacity var(--transition-carousel);
+}
+
+/* Portrait frame — 1:2 ratio */
+.card-portrait {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 2;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow:
+    0 10px 50px rgba(0,0,0,0.65),
+    0 0 0 1px rgba(201,168,76,0.06);
+  transition: box-shadow 0.5s, transform 0.5s cubic-bezier(0.22,0.61,0.36,1);
+}
+.card-portrait img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: center 15%;
+  display: block;
+}
+
+/* Bottom gradient for name */
+.card-gradient {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 50%;
+  background: linear-gradient(to top, rgba(5,8,8,0.92) 0%, rgba(5,8,8,0.4) 50%, transparent 100%);
+  pointer-events: none;
+}
+
+/* Active glow overlay — only visible when centered */
+.card-glow {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 30%,
+    rgba(201,168,76,0.10) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.6s;
+  pointer-events: none;
+}
+
+/* Name label */
+.card-name {
+  position: absolute; bottom: 18px; left: 0; right: 0;
+  text-align: center;
+  font-family: 'Cinzel', serif;
+  font-size: clamp(0.85rem, 1.3vw, 1.1rem);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--text-1);
+  text-shadow: 0 2px 14px rgba(0,0,0,0.85);
+  opacity: 0.7;
+  transition: opacity 0.5s, text-shadow 0.5s;
+}
+.card-name-sub {
+  display: block;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.62rem;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  color: var(--text-3);
+  margin-top: 2px;
+}
+
+/* Active card state — set by JS via class */
+.class-card.active .card-portrait {
+  box-shadow:
+    0 15px 60px rgba(0,0,0,0.7),
+    0 0 0 1px rgba(201,168,76,0.15),
+    0 0 50px rgba(201,168,76,0.06);
+}
+.class-card.active .card-glow { opacity: 1; }
+.class-card.active .card-name { opacity: 1; text-shadow: 0 2px 16px rgba(0,0,0,0.9), 0 0 20px rgba(201,168,76,0.15); }
+
+/* Non-active: slight darken via brightness */
+.class-card:not(.active) {
+  filter: brightness(0.55);
+}
+.class-card.active {
+  filter: brightness(1);
+}
+
+/* ============================================================
+   ACTIVE CLASS INFO (below carousel)
+   ============================================================ */
+.active-info {
+  position: fixed;
+  bottom: clamp(28px, 5vh, 56px);
+  left: 50%; transform: translateX(-50%);
+  z-index: 20;
+  text-align: center;
+  pointer-events: none;
+  transition: opacity 0.5s;
+}
+.active-info-name {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(1.6rem, 2.8vw, 2.4rem);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+.active-info-tagline {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(0.78rem, 1vw, 0.92rem);
+  font-weight: 400;
+  font-style: italic;
+  letter-spacing: 0.08em;
+  color: var(--text-2);
+  max-width: 480px;
+  margin: 0 auto;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.6);
+}
+
+/* ============================================================
+   NAV ARROWS
+   ============================================================ */
+.nav-arrow {
+  position: fixed; top: 50%;
+  transform: translateY(-50%);
+  z-index: 30;
+  width: 48px; height: 48px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(5,8,8,0.35);
+  border: 1px solid rgba(201,168,76,0.12);
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--text-3);
+  transition: all 0.4s;
+}
+.nav-arrow:hover {
+  border-color: rgba(201,168,76,0.35);
+  color: var(--text-1);
+  background: rgba(5,8,8,0.5);
+  box-shadow: 0 0 20px rgba(201,168,76,0.06);
+}
+.nav-arrow:active { transform: translateY(-50%) scale(0.93); }
+.nav-arrow svg {
+  width: 18px; height: 18px;
+  stroke: currentColor; fill: none; stroke-width: 1.5;
+}
+.nav-left { left: clamp(16px, 3vw, 40px); }
+.nav-right { right: clamp(16px, 3vw, 40px); }
+
+/* ============================================================
+   KEYBOARD HINT
+   ============================================================ */
+.key-hint {
+  position: fixed;
+  bottom: 12px; left: 50%;
+  transform: translateX(-50%);
+  z-index: 15;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* ============================================================
+   LOADING CURTAIN
+   ============================================================ */
+.loading-curtain {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--void);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 28px;
+  transition: opacity 1.2s cubic-bezier(0.22,0.61,0.36,1);
+}
+.loading-curtain.lifted {
+  opacity: 0;
+  pointer-events: none;
+}
+.loading-crest {
+  width: 48px; height: 48px;
+  color: var(--gold-dim);
+  animation: crest-pulse 2.5s ease-in-out infinite;
+}
+@keyframes crest-pulse {
+  0%,100% { opacity: 0.4; transform: scale(1); filter: drop-shadow(0 0 8px rgba(201,168,76,0.15)); }
+  50% { opacity: 0.9; transform: scale(1.06); filter: drop-shadow(0 0 20px rgba(201,168,76,0.35)); }
+}
+.loading-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  animation: lt-breathe 2s ease-in-out infinite;
+}
+@keyframes lt-breathe {
+  0%,100% { opacity: 0.35; }
+  50% { opacity: 0.7; }
+}
+.loading-bar-track {
+  width: 180px; height: 1px;
+  background: rgba(201,168,76,0.1);
+  border-radius: 1px;
+  overflow: hidden;
+}
+.loading-bar-fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+  transition: width 0.3s ease-out;
+}
+
+/* ============================================================
+   ENTRANCE ANIMATIONS
+   ============================================================ */
+@keyframes fade-rise {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.anim-enter { animation: fade-rise 1s cubic-bezier(0.25,0.8,0.25,1) both; }
+.anim-d1 { animation-delay: 0.2s; }
+.anim-d2 { animation-delay: 0.5s; }
+.anim-d3 { animation-delay: 0.8s; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- ====== LOADING CURTAIN ====== -->
+<div class="loading-curtain" id="loadingCurtain">
+  <svg class="loading-crest" viewBox="0 0 80 80" fill="none" stroke="currentColor" stroke-width="1.2">
+    <path d="M40 4 L12 18 L12 44 C12 58 24 72 40 76 C56 72 68 58 68 44 L68 18 Z"/>
+    <path d="M40 12 L18 23 L18 42 C18 53 27 64 40 68 C53 64 62 53 62 42 L62 23 Z" opacity="0.4"/>
+    <path d="M40 28 C36 32 33 36 33 40 C33 44 36 48 40 50 C44 48 47 44 47 40 C47 36 44 32 40 28Z" fill="currentColor" opacity="0.3"/>
+  </svg>
+  <div class="loading-text">Entering the Pantheon</div>
+  <div class="loading-bar-track">
+    <div class="loading-bar-fill" id="loadingBar"></div>
+  </div>
+</div>
+
+<!-- ====== BACKGROUND ====== -->
+<div class="bg-layer">
+  <img src="职业选择/背景/万神殿.png" alt="Pantheon Hall">
+</div>
+<div class="vignette"></div>
+<div class="atmosphere"></div>
+<div class="fog fog-1"></div>
+<div class="fog fog-2"></div>
+
+<!-- Particle canvas -->
+<canvas id="particle-canvas"></canvas>
+
+<!-- ====== HEADER ====== -->
+<div class="page-header anim-enter anim-d1">
+  <div class="header-title">Chronicle of Fates — Choose Your Calling</div>
+</div>
+
+<div class="step-indicator anim-enter anim-d1">
+  <div class="step-dot done"></div>
+  <div class="step-dot active"></div>
+  <div class="step-dot"></div>
+  <div class="step-dot"></div>
+  <span class="step-label">Class</span>
+</div>
+
+<!-- ====== 3D CAROUSEL ====== -->
+<div class="carousel-stage" id="carouselStage">
+  <div class="carousel-ring" id="carouselRing">
+    <!-- Cards injected by JS -->
+  </div>
+</div>
+
+<!-- Active class info display -->
+<div class="active-info anim-enter anim-d3" id="activeInfo">
+  <div class="active-info-name gold-text" id="activeInfoName">Fighter</div>
+  <div class="active-info-tagline" id="activeInfoTagline">钢铁意志铸就的不朽战魂，在战场的最前线书写传奇。</div>
+</div>
+
+<!-- Nav arrows -->
+<button class="nav-arrow nav-left" id="navLeft" onclick="rotateTo(currentIndex - 1)">
+  <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+</button>
+<button class="nav-arrow nav-right" id="navRight" onclick="rotateTo(currentIndex + 1)">
+  <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+</button>
+
+<!-- Keyboard hint -->
+<div class="key-hint anim-enter anim-d3">← → Arrow Keys · Click to Select</div>
+
+<script>
+/* ============================================================
+   CLASS DATA
+   ============================================================ */
+const CLASSES = [
+  {
+    id: 'fighter',
+    name: 'Fighter',
+    nameCN: '战士',
+    tagline: '钢铁意志铸就的不朽战魂，在战场的最前线书写传奇。',
+    portrait: '职业选择/职业立绘/战士/warrior1.png',
+  },
+  {
+    id: 'wizard',
+    name: 'Wizard',
+    nameCN: '法师',
+    tagline: '穷极奥术真理的求知者，以咒文编织现实的经纬。',
+    portrait: '职业选择/职业立绘/法师/soccer2.png',
+  },
+  {
+    id: 'cleric',
+    name: 'Cleric',
+    nameCN: '牧师',
+    tagline: '神明意志的传导者，以信仰之光驱散世间黑暗。',
+    portrait: '职业选择/职业立绘/牧师/Priest.png',
+  },
+  {
+    id: 'rogue',
+    name: 'Rogue',
+    nameCN: '盗贼',
+    tagline: '暗影中无声的刃，在命运的缝隙间穿行。',
+    portrait: '职业选择/职业立绘/盗贼/rogue.png',
+  },
+  {
+    id: 'druid',
+    name: 'Druid',
+    nameCN: '德鲁伊',
+    tagline: '自然意志的化身，聆听万物低语的原初之声。',
+    portrait: '职业选择/职业立绘/德鲁伊/druid4.png',
+  },
+];
+
+const COUNT = CLASSES.length;
+const ANGLE_STEP = 360 / COUNT;       // 72° per card
+// translateZ radius — controls ring size / gap between cards
+const RADIUS = Math.max(380, window.innerWidth * 0.32);
+
+/* ============================================================
+   BUILD CARDS
+   ============================================================ */
+const ring = document.getElementById('carouselRing');
+
+CLASSES.forEach((cls, i) => {
+  const card = document.createElement('div');
+  card.className = 'class-card';
+  card.dataset.index = i;
+  // Each card orbits: rotateY(angle) then pushes outward
+  const angle = i * ANGLE_STEP;
+  card.style.transform =
+    `rotateY(${angle}deg) translateZ(${RADIUS}px) translate(-50%, -50%)`;
+
+  card.innerHTML = `
+    <div class="card-portrait">
+      <img src="${cls.portrait}" alt="${cls.name}" loading="eager">
+      <div class="card-glow"></div>
+      <div class="card-gradient"></div>
+      <div class="card-name">
+        ${cls.name}
+        <span class="card-name-sub">${cls.nameCN}</span>
+      </div>
+    </div>
+  `;
+
+  card.addEventListener('click', () => rotateTo(i));
+  ring.appendChild(card);
+});
+
+/* ============================================================
+   CAROUSEL ROTATION
+   ============================================================ */
+let currentIndex = 0;
+let isAnimating = false;
+
+function rotateTo(index) {
+  // Wrap index
+  const n = ((index % COUNT) + COUNT) % COUNT;
+
+  // Compute shortest rotation direction
+  let diff = n - currentIndex;
+  if (diff > COUNT / 2) diff -= COUNT;
+  if (diff < -COUNT / 2) diff += COUNT;
+
+  currentIndex = n;
+
+  // The ring rotates opposite to bring the target card to front
+  // Read current rotation and add delta
+  const currentRotation = parseFloat(ring.dataset.rotation || 0);
+  const newRotation = currentRotation - diff * ANGLE_STEP;
+  ring.dataset.rotation = newRotation;
+
+  ring.style.transform = `rotateY(${newRotation}deg)`;
+
+  updateActiveStates();
+  updateInfo();
+
+  // Block rapid fire during animation
+  isAnimating = true;
+  setTimeout(() => { isAnimating = false; }, 750);
+}
+
+function updateActiveStates() {
+  document.querySelectorAll('.class-card').forEach((card, i) => {
+    if (i === currentIndex) {
+      card.classList.add('active');
+    } else {
+      card.classList.remove('active');
+    }
+  });
+}
+
+function updateInfo() {
+  const cls = CLASSES[currentIndex];
+  const nameEl = document.getElementById('activeInfoName');
+  const tagEl = document.getElementById('activeInfoTagline');
+
+  // Quick fade-out, swap, fade-in
+  const info = document.getElementById('activeInfo');
+  info.style.opacity = '0';
+  setTimeout(() => {
+    nameEl.textContent = cls.name;
+    tagEl.textContent = cls.tagline;
+    info.style.opacity = '1';
+  }, 250);
+}
+
+// Initial state
+updateActiveStates();
+ring.dataset.rotation = 0;
+
+/* ============================================================
+   KEYBOARD CONTROLS
+   ============================================================ */
+document.addEventListener('keydown', (e) => {
+  if (isAnimating) return;
+  if (e.key === 'ArrowLeft')  rotateTo(currentIndex - 1);
+  if (e.key === 'ArrowRight') rotateTo(currentIndex + 1);
+});
+
+/* ============================================================
+   PARTICLE SYSTEM (Canvas) — same as race-selection
+   ============================================================ */
+(function() {
+  const canvas = document.getElementById('particle-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H;
+  const particles = [];
+  const PARTICLE_COUNT = 65;
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  class Particle {
+    constructor() { this.reset(true); }
+    reset(initial) {
+      this.x = Math.random() * W;
+      this.y = initial ? Math.random() * H : H + 10;
+      this.size = 0.6 + Math.random() * 2;
+      this.speedY = -(0.1 + Math.random() * 0.45);
+      this.speedX = (Math.random() - 0.5) * 0.25;
+      this.sway = Math.random() * Math.PI * 2;
+      this.swaySpeed = 0.004 + Math.random() * 0.012;
+      this.swayAmp = 12 + Math.random() * 20;
+      this.maxOpacity = 0.15 + Math.random() * 0.45;
+      this.opacity = initial ? Math.random() * this.maxOpacity : 0;
+      this.fadeIn = !initial;
+      const r = 200 + Math.random() * 55;
+      const g = 160 + Math.random() * 70;
+      const b = 40 + Math.random() * 40;
+      this.color = `${r},${g},${b}`;
+      this.glowSize = this.size * (2 + Math.random() * 3);
+      this.isSparkle = Math.random() > 0.78;
+      if (this.isSparkle) {
+        this.sparklePhase = Math.random() * Math.PI * 2;
+        this.sparkleSpeed = 0.03 + Math.random() * 0.05;
+        this.speedY *= 0.25;
+        this.color = '255,245,220';
+        this.maxOpacity = 0.12 + Math.random() * 0.3;
+      }
+    }
+    update() {
+      this.sway += this.swaySpeed;
+      this.x += this.speedX + Math.sin(this.sway) * 0.25;
+      this.y += this.speedY;
+      if (this.fadeIn) {
+        this.opacity = Math.min(this.opacity + 0.004, this.maxOpacity);
+        if (this.opacity >= this.maxOpacity) this.fadeIn = false;
+      }
+      if (this.y < H * 0.12) this.opacity *= 0.995;
+      if (this.isSparkle) {
+        this.sparklePhase += this.sparkleSpeed;
+        this.opacity = this.maxOpacity * (0.3 + 0.7 * Math.abs(Math.sin(this.sparklePhase)));
+      }
+      if (this.y < -20 || this.opacity < 0.01) this.reset(false);
+    }
+    draw() {
+      ctx.save();
+      ctx.globalAlpha = this.opacity * 0.4;
+      ctx.fillStyle = `rgba(${this.color},1)`;
+      ctx.shadowColor = `rgba(${this.color},0.6)`;
+      ctx.shadowBlur = this.glowSize;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = this.opacity;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size * 0.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  for (let i = 0; i < PARTICLE_COUNT; i++) particles.push(new Particle());
+
+  function animate() {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => { p.update(); p.draw(); });
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+
+/* ============================================================
+   IMAGE PRELOADER
+   ============================================================ */
+(function() {
+  const curtain = document.getElementById('loadingCurtain');
+  const bar = document.getElementById('loadingBar');
+
+  const criticalSrcs = [
+    '职业选择/背景/万神殿.png',
+    '职业选择/职业立绘/战士/warrior1.png',
+    '职业选择/职业立绘/法师/soccer2.png',
+    '职业选择/职业立绘/牧师/Priest.png',
+    '职业选择/职业立绘/盗贼/rogue.png',
+    '职业选择/职业立绘/德鲁伊/druid4.png',
+  ];
+
+  let loaded = 0;
+  const total = criticalSrcs.length;
+
+  function onLoad() {
+    loaded++;
+    bar.style.width = Math.round((loaded / total) * 100) + '%';
+    if (loaded >= total) liftCurtain();
+  }
+
+  function liftCurtain() {
+    setTimeout(() => {
+      curtain.classList.add('lifted');
+      setTimeout(() => curtain.remove(), 1400);
+    }, 300);
+  }
+
+  criticalSrcs.forEach(src => {
+    const img = new Image();
+    img.onload = onLoad;
+    img.onerror = onLoad;
+    img.src = src;
+  });
+
+  // Safety net
+  setTimeout(() => {
+    if (!curtain.classList.contains('lifted')) liftCurtain();
+  }, 12000);
+})();
+</script>
+
+</body>
+</html>
