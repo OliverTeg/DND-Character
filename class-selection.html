@@ -181,22 +181,31 @@ body {
 
 .carousel-ring {
   position: relative;
-  width: 1px; height: 1px;             /* ring itself is a point; children orbit */
+  width: 0; height: 0;
   transform-style: preserve-3d;
+  transform-origin: 0 0;               /* axis pinned to the geometric center */
   transition: transform var(--transition-carousel);
 }
 
-/* Individual class card — positioned by JS via rotateY + translateZ */
+/* Orbital anchor — zero-size point; ONLY does rotateY + translateZ */
 .class-card {
   position: absolute;
-  left: 50%; top: 50%;
-  width: clamp(190px, 17vw, 270px);
+  left: 0; top: 0;
+  width: 0; height: 0;
   transform-style: preserve-3d;
   cursor: pointer;
-  /* backface-visibility: hidden; — intentionally NOT set so we keep smooth rotation */
   transition:
     filter var(--transition-carousel),
     opacity var(--transition-carousel);
+}
+
+/* Visual card — centering is done HERE, completely independent of 3D orbit */
+.card-inner {
+  position: absolute;
+  width: clamp(190px, 17vw, 270px);
+  /* center the visual card on its zero-size parent anchor */
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
 }
 
 /* Portrait frame — 1:2 ratio */
@@ -278,12 +287,28 @@ body {
 }
 
 /* ============================================================
-   ACTIVE CLASS INFO (below carousel)
+   BOTTOM SCRIM — cinematic dark gradient behind text
+   ============================================================ */
+.bottom-scrim {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 28vh;
+  z-index: 15;
+  background: linear-gradient(to top,
+    rgba(0,0,0,0.85) 0%,
+    rgba(0,0,0,0.55) 35%,
+    rgba(0,0,0,0.15) 70%,
+    transparent 100%);
+  pointer-events: none;
+}
+
+/* ============================================================
+   ACTIVE CLASS INFO — anchored to viewport center axis
    ============================================================ */
 .active-info {
   position: fixed;
-  bottom: clamp(28px, 5vh, 56px);
-  left: 50%; transform: translateX(-50%);
+  bottom: clamp(40px, 7vh, 80px);
+  left: 0; right: 0;            /* full-width, text-align handles centering */
   z-index: 20;
   text-align: center;
   pointer-events: none;
@@ -294,18 +319,26 @@ body {
   font-size: clamp(1.6rem, 2.8vw, 2.4rem);
   font-weight: 600;
   letter-spacing: 0.08em;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+  color: #D4AF37;
+  text-shadow:
+    0 0 20px rgba(0,0,0,1),
+    0 4px 15px rgba(0,0,0,0.9),
+    0 1px 3px rgba(0,0,0,1);
 }
 .active-info-tagline {
   font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(0.78rem, 1vw, 0.92rem);
+  font-size: clamp(0.82rem, 1.05vw, 0.95rem);
   font-weight: 400;
   font-style: italic;
-  letter-spacing: 0.08em;
-  color: var(--text-2);
-  max-width: 480px;
+  letter-spacing: 0.06em;
+  color: rgba(255,255,255,0.85);
+  max-width: 500px;
   margin: 0 auto;
-  text-shadow: 0 1px 6px rgba(0,0,0,0.6);
+  text-shadow:
+    0 0 16px rgba(0,0,0,1),
+    0 3px 12px rgba(0,0,0,0.9),
+    0 1px 2px rgba(0,0,0,1);
 }
 
 /* ============================================================
@@ -471,9 +504,12 @@ body {
   </div>
 </div>
 
+<!-- Bottom scrim gradient -->
+<div class="bottom-scrim"></div>
+
 <!-- Active class info display -->
 <div class="active-info anim-enter anim-d3" id="activeInfo">
-  <div class="active-info-name gold-text" id="activeInfoName">Fighter</div>
+  <div class="active-info-name" id="activeInfoName">Fighter</div>
   <div class="active-info-tagline" id="activeInfoTagline">钢铁意志铸就的不朽战魂，在战场的最前线书写传奇。</div>
 </div>
 
@@ -544,19 +580,16 @@ CLASSES.forEach((cls, i) => {
   const card = document.createElement('div');
   card.className = 'class-card';
   card.dataset.index = i;
-  // Each card orbits: rotateY(angle) then pushes outward
+  // Pure 3D orbit — NO centering offset here
   const angle = i * ANGLE_STEP;
-  card.style.transform =
-    `rotateY(${angle}deg) translateZ(${RADIUS}px) translate(-50%, -50%)`;
+  card.style.transform = `rotateY(${angle}deg) translateZ(${RADIUS}px)`;
 
+  // Visual content lives in card-inner (handles its own centering)
   card.innerHTML = `
-    <div class="card-portrait">
-      <img src="${cls.portrait}" alt="${cls.name}" loading="eager">
-      <div class="card-glow"></div>
-      <div class="card-gradient"></div>
-      <div class="card-name">
-        ${cls.name}
-        <span class="card-name-sub">${cls.nameCN}</span>
+    <div class="card-inner">
+      <div class="card-portrait">
+        <img src="${cls.portrait}" alt="${cls.name}" loading="eager">
+        <div class="card-glow"></div>
       </div>
     </div>
   `;
